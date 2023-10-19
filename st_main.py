@@ -14,7 +14,8 @@ import base64
 import shap
 import matplotlib.pyplot as plt
 
-
+here = os.path.dirname(os.path.abspath(__file__))
+print(here)
 st.set_page_config(layout="wide")
 st.set_option('deprecation.showPyplotGlobalUse', False)
 st.markdown(
@@ -414,7 +415,7 @@ def preprocessig(df) -> pd.DataFrame:
         my_bar.progress(percent := percent + 5, f'{percent}%  создание комбинаций...')
 
     my_bar.progress(percent := percent + 20, f'{percent}%  загрузка энкодера...')
-    with open(r'le_enc_2.pkl', 'rb') as f:
+    with open(here+r'/le_enc_2.pkl', 'rb') as f:
         OrdEnc = pickle.load(f)
     my_bar.progress(percent := percent + 15, f'{percent}%  трансформация категорий...')
 
@@ -454,16 +455,16 @@ def models(make_pred: bool, large_model: bool, device)->None:
             meta_models=[]
             meta_data=[]
             xgb_pred=np.zeros(len(df))
-            for fold, path in enumerate(os.listdir('./models/')):
+            for fold, path in enumerate(os.listdir('/models/')):
                 temp=df.copy()
-                for i, model_path in enumerate(os.listdir(f'./models/{path}/')):
+                for i, model_path in enumerate(os.listdir(here+f'/models/{path}/')):
                     my_bar.progress(percent:= percent+3, f'{percent}%: {model_names[i]}, fold: {fold}')
                     if model_path[-4:] == '.pkl':
-                        with open(f'./models/{path}/{model_path}', 'rb') as f:
+                        with open(here+f'/models/{path}/{model_path}', 'rb') as f:
                             model = joblib.load(f)
                     elif model_path[-5:] == '.json':
                         model = xgb.Booster()
-                        model.load_model(f"./models/{path}/{model_path}")
+                        model.load_model(here+f"/models/{path}/{model_path}")
                     if model_path[:2] == 'cb':
                         if fold % 2 == 1:
                             temp[model_names[i]] = model.predict_proba(df, task_type=device)[:, 1]
@@ -474,7 +475,7 @@ def models(make_pred: bool, large_model: bool, device)->None:
                             xgb_pred+=model.predict(xgb.DMatrix(df))
                             models[i].append(model)
                 my_bar.progress(percent := percent + 10, f'{percent}%: meta_model_{fold}')
-                with open(f'./stacking_model/cb_meta_{fold}.pkl', 'rb') as f:
+                with open(here+f'/stacking_model/cb_meta_{fold}.pkl', 'rb') as f:
                     stack = joblib.load(f)
                 if fold%2==1:
                     meta_models.append(stack)
@@ -486,7 +487,7 @@ def models(make_pred: bool, large_model: bool, device)->None:
             st.session_state['meta_data'] = meta_data
             st.session_state['xgb_pred'] = (xgb_pred/4).round()
         else:
-            with open(f'./models/fold_0/cb_42_0.pkl', 'rb') as f:
+            with open(here+f'/models/fold_0/cb_42_0.pkl', 'rb') as f:
                 model = joblib.load(f)
             #model = Tabr('./streamlit/models/fold_0/best_0.pt')
 
@@ -609,10 +610,10 @@ def visualize_dataset_predictions_summary(features_data: pd.DataFrame, shap_valu
 
     data=pd.DataFrame(shap_values, columns=features_data.columns)
 
-    cont.download_button('Скачать .csv', file_name='pred.csv',
+    cont.download_button('Скачать .csv', file_name=here+'/pred.csv',
                                   data=convert_df(data), key=f'csv_{i}'
                                   )
-    cont.download_button('Скачать .xlsx', file_name='pred.xlsx',
+    cont.download_button('Скачать .xlsx', file_name=here+'/pred.xlsx',
                            data=convert_df(data), key=f'xlsx_{i}'
                            )
     components.html(paint)
@@ -719,16 +720,16 @@ if uploaded_file:
             el1 = cont1_1.dataframe(best_df, hide_index=False, use_container_width=True, column_config={col: st.column_config.TextColumn(col, width='small')})
             el2 = cont1_2.dataframe(worst_df, hide_index=False, use_container_width=True, column_config={col: st.column_config.TextColumn(col, width='small')})
 
-            dw1=col1_2.download_button('Скачать таблицу .csv', file_name='best_df.csv', data=convert_df(df_, 'csv'), key='dw1')
-            dw4=col1_2.download_button('Скачать таблицу .xlsx', file_name='best_df.xlsx', data=convert_df(df_, 'excel'))
+            dw1=col1_2.download_button('Скачать таблицу .csv', file_name=here+'/best_df.csv', data=convert_df(df_, 'csv'), key='dw1')
+            dw4=col1_2.download_button('Скачать таблицу .xlsx', file_name=here+'/best_df.xlsx', data=convert_df(df_, 'excel'))
 
             df_expected_loss, expected_loss = expected_loss(filtred_df)
 
             el4=col3_1.dataframe(df_expected_loss, hide_index=False)
             col3_1_, col3_2_ = col3.columns([0.5, 1])
             text2 = col3_1_.write(f'Ожидаемые потери: {expected_loss:.7}')
-            dw2 = col3_2_.download_button('Скачать таблицу .csv', file_name='expected_df.csv',data=convert_df(df_expected_loss, 'csv'))
-            dw3 = col3_2_.download_button('Скачать таблицу .xlsx', file_name='expected_df.xlsx', data=convert_df(df_expected_loss, 'excel'))
+            dw2 = col3_2_.download_button('Скачать таблицу .csv', file_name=here+'/expected_df.csv',data=convert_df(df_expected_loss, 'csv'))
+            dw3 = col3_2_.download_button('Скачать таблицу .xlsx', file_name=here+'/expected_df.xlsx', data=convert_df(df_expected_loss, 'excel'))
 
             el_lst.extend([el1, el2, el4])
             to_None.extend([dw1, dw2, dw3, dw4, col])
