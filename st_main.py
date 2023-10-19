@@ -231,6 +231,7 @@ a.focus_text{position:relative;
 <p>-Оставьте поле пустым для вывода статистики по всему датасету</p>
 <p>-Для вывода статистики для определенных заказов введите ID через ; без пробелов (пример: 1;2;3;4;5)</p>
 <p>-Если вам нужно выбрать кусок данных по условию, то вводите интересующие вас колонки, условия =,>,<,>=,<= и значения без пробелов(пример: Материал=5;Сумма<=6;Согласование заказа 1>2)</p>
+<p>- нужно использовать параметры только загружаемого датасета</p>
 </span> <!-- скрытый элемент -->
 </div>'''
 help_to_best = '''<style>
@@ -603,17 +604,18 @@ def visualize_dataset_predictions_summary(features_data: pd.DataFrame, shap_valu
     features_data['Уникальная цепочка поставки']=features_data[not_inter].sum(axis=1)
     features_data=features_data.drop(columns=not_inter)
     features_data=features_data.rename(columns={'Изменение позиции заказа на закупку: изменение даты поставки на бумаге': 'изменение даты поставки на бумаге',
-                                        'Изменение позиции заказа на закупку: дата поставки':'дата поставки',})
+                                        'Изменение позиции заказа на закупку: дата поставки':'дата поставки',
+                                                'ДлитlowerДо': 'прибытие поставки раньше срока'})
 
     shap_values.T[20] = shap_values.T[20:26].sum(axis=0)
     shap_values=np.delete(shap_values, list(range(21, 26)), axis=1)
 
     data=pd.DataFrame(shap_values, columns=features_data.columns)
 
-    cont.download_button('Скачать .csv', file_name=here+'/pred.csv',
+    cont.download_button('Скачать .csv', file_name='pred.csv',
                                   data=convert_df(data), key=f'csv_{i}'
                                   )
-    cont.download_button('Скачать .xlsx', file_name=here+'/pred.xlsx',
+    cont.download_button('Скачать .xlsx', file_name='pred.xlsx',
                            data=convert_df(data), key=f'xlsx_{i}'
                            )
     components.html(paint)
@@ -638,7 +640,8 @@ def visualize_dataset_predictions_decision(features_data: pd.DataFrame, shap_val
         features_data['Уникальная цепочка поставки'] = features_data[not_inter].sum(axis=1)
     features_data=features_data.drop(columns=not_inter)
     features_data=features_data.rename(columns={'Изменение позиции заказа на закупку: изменение даты поставки на бумаге': 'изменение даты поставки на бумаге',
-                                        'Изменение позиции заказа на закупку: дата поставки':'дата поставки',})
+                                        'Изменение позиции заказа на закупку: дата поставки':'дата поставки',
+                                                'ДлитlowerДо': 'прибытие поставки раньше срока'})
 
     shap_values.T[20] = shap_values.T[20:26].sum(axis=0)
     shap_values = np.delete(shap_values, list(range(21, 26)), axis=1)
@@ -720,16 +723,16 @@ if uploaded_file:
             el1 = cont1_1.dataframe(best_df, hide_index=False, use_container_width=True, column_config={col: st.column_config.TextColumn(col, width='small')})
             el2 = cont1_2.dataframe(worst_df, hide_index=False, use_container_width=True, column_config={col: st.column_config.TextColumn(col, width='small')})
 
-            dw1=col1_2.download_button('Скачать таблицу .csv', file_name=here+'/best_df.csv', data=convert_df(df_, 'csv'), key='dw1')
-            dw4=col1_2.download_button('Скачать таблицу .xlsx', file_name=here+'/best_df.xlsx', data=convert_df(df_, 'excel'))
+            dw1=col1_2.download_button('Скачать таблицу .csv', file_name='best_df.csv', data=convert_df(df_, 'csv'), key='dw1')
+            dw4=col1_2.download_button('Скачать таблицу .xlsx', file_name='best_df.xlsx', data=convert_df(df_, 'excel'))
 
             df_expected_loss, expected_loss = expected_loss(filtred_df)
 
             el4=col3_1.dataframe(df_expected_loss, hide_index=False)
             col3_1_, col3_2_ = col3.columns([0.5, 1])
             text2 = col3_1_.write(f'Ожидаемые потери: {expected_loss:.7}')
-            dw2 = col3_2_.download_button('Скачать таблицу .csv', file_name=here+'/expected_df.csv',data=convert_df(df_expected_loss, 'csv'))
-            dw3 = col3_2_.download_button('Скачать таблицу .xlsx', file_name=here+'/expected_df.xlsx', data=convert_df(df_expected_loss, 'excel'))
+            dw2 = col3_2_.download_button('Скачать таблицу .csv', file_name='expected_df.csv',data=convert_df(df_expected_loss, 'csv'))
+            dw3 = col3_2_.download_button('Скачать таблицу .xlsx', file_name='expected_df.xlsx', data=convert_df(df_expected_loss, 'excel'))
 
             el_lst.extend([el1, el2, el4])
             to_None.extend([dw1, dw2, dw3, dw4, col])
