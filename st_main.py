@@ -360,7 +360,7 @@ help_to_switch='''
 Большая модель занимает больше ресурсов и времени выполнения, но дает более подробную информацию по предсказаниям
 '''
 
-use_cols=pd.read_csv(r'D:\!!ufa\aiijc\aic\train1314.csv', ).drop('y', axis=1).columns
+use_cols=pd.read_csv(r'train1314.csv', ).drop('y', axis=1).columns
 
 uploaded_file = st.sidebar.file_uploader("Choose a file")
 
@@ -444,16 +444,16 @@ def models(make_pred: bool, large_model: bool, device)->None:
             meta_models=[]
             meta_data=[]
             xgb_pred=np.zeros(len(df))
-            for fold, path in enumerate(os.listdir('./streamlit/models/')):
+            for fold, path in enumerate(os.listdir('./models/')):
                 temp=df.copy()
-                for i, model_path in enumerate(os.listdir(f'./streamlit/models/{path}/')):
+                for i, model_path in enumerate(os.listdir(f'./models/{path}/')):
                     my_bar.progress(percent:= percent+3, f'{percent}%: {model_names[i]}, fold: {fold}')
                     if model_path[-4:] == '.pkl':
                         with open(f'./streamlit/models/{path}/{model_path}', 'rb') as f:
                             model = joblib.load(f)
                     elif model_path[-5:] == '.json':
                         model = xgb.Booster()
-                        model.load_model(f"./streamlit/models/{path}/{model_path}")
+                        model.load_model(f"./models/{path}/{model_path}")
                     if model_path[:2] == 'cb':
                          temp[model_names[i]] = model.predict_proba(df, task_type=device)[:, 1]
                          if fold%2==1:
@@ -464,7 +464,7 @@ def models(make_pred: bool, large_model: bool, device)->None:
                         if fold % 2 == 1:
                             models[i].append(model)
                 my_bar.progress(percent := percent + 10, f'{percent}%: meta_model_{fold}')
-                with open(f'./streamlit/stacking_model/cb_meta_{fold}.pkl', 'rb') as f:
+                with open(f'./stacking_model/cb_meta_{fold}.pkl', 'rb') as f:
                     stack = joblib.load(f)
                 meta_models.append(stack)
                 meta_data.append(temp)
