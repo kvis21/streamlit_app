@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 # Предсказание срыва поставок
 ## Banana Overfit Capybaras
 
