@@ -14,7 +14,7 @@ import base64
 import shap
 import matplotlib.pyplot as plt
 
-os.chdir('main/streamlit_app/')
+os.chdir('./main/streamlit_app/')
 
 st.set_page_config(layout="wide")
 st.set_option('deprecation.showPyplotGlobalUse', False)
