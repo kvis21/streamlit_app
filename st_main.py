@@ -15,7 +15,6 @@ import shap
 import matplotlib.pyplot as plt
 
 
-
 st.set_page_config(layout="wide")
 st.set_option('deprecation.showPyplotGlobalUse', False)
 st.markdown(
@@ -361,24 +360,8 @@ help_to_switch='''
 Большая модель занимает больше ресурсов и времени выполнения, но дает более подробную информацию по предсказаниям
 '''
 
-use_cols=['Поставщик', 'Операционный менеджер', 'Завод', 'Закупочная организация',
-       'Группа закупок', 'Балансовая единица', 'Длительность', 'До поставки',
-       'Месяц2', 'День недели 2', 'Количество позиций',
-       'Количество обработчиков 30', 'Согласование заказа 1',
-       'Изменение даты поставки 30',
-       'Изменение позиции заказа на закупку: изменение даты поставки на бумаге',
-       'Изменение позиции заказа на закупку: дата поставки',
-       'Количество циклов согласования',
-       'Количество изменений после согласований', 'Дней между 0_1',
-       'ДлитlowerДо',
-       'Поставщик_Материал_Категорийный менеджер_Операционный менеджер_Завод_Закупочная организация_Группа закупок_Группа материалов_Вариант поставки_Балансовая единица_Месяц1_Месяц2_Месяц3',
-       'Поставщик_Категорийный менеджер_Операционный менеджер_Завод_Закупочная организация_Группа закупок_Группа материалов_Вариант поставки_Балансовая единица_ЕИ_Месяц2_Месяц3_День недели 2',
-       'Поставщик_Категорийный менеджер_Операционный менеджер_Завод_Закупочная организация_Группа закупок_Группа материалов_Вариант поставки_Балансовая единица_Месяц1_Месяц2_Месяц3_День недели 2',
-       'Поставщик_Категорийный менеджер_Операционный менеджер_Завод_Закупочная организация_Группа закупок_Группа материалов_Вариант поставки_ЕИ_Месяц1_Месяц2_Месяц3_День недели 2',
-       'Поставщик_Категорийный менеджер_Операционный менеджер_Завод_Закупочная организация_Группа закупок_Вариант поставки_Балансовая единица_ЕИ_Месяц1_Месяц2_Месяц3_День недели 2',
-       'Поставщик_Категорийный менеджер_Операционный менеджер_Закупочная организация_Группа закупок_Группа материалов_Вариант поставки_Балансовая единица_ЕИ_Месяц1_Месяц2_Месяц3_День недели 2']#pd.read_csv(r'train1314.csv', ).drop('y', axis=1).columns
-
-
+use_cols=pd.read_csv(r'D:\!!ufa\aiijc\aic\train1314.csv', ).drop('y', axis=1).columns
+print(use_cols)
 uploaded_file = st.sidebar.file_uploader("Choose a file")
 
 cont_side=st.sidebar.container()
@@ -413,17 +396,16 @@ def preprocessig(df) -> pd.DataFrame:
             combinations += comb
 
     to_LE = []
-    for num, cols in enumerate(combinations):
-        df['_'.join(cols)] = df[list(cols)].apply(lambda x: "_".join(x), axis=1)
-        categorical.append('_'.join(cols))
-        to_LE.append('_'.join(cols))
-        if num % 10 == 0:
-            my_bar.progress(percent := percent + 5, f'{percent}%  создание комбинаций...')
 
-    my_bar.progress(percent := percent + 5, f'{percent}%  загрузка энкодера...')
-    with open(r'D:\!!ufa\aiijc\aic\le_enc.pkl', 'rb') as f:
+    for feats in list(map(lambda x: x.split('_'), not_inter)):
+        df['_'.join(feats)] = df[feats].apply(lambda x: "_".join(x), axis=1)
+        to_LE.append('_'.join(feats))
+        my_bar.progress(percent := percent + 5, f'{percent}%  создание комбинаций...')
+
+    my_bar.progress(percent := percent + 20, f'{percent}%  загрузка энкодера...')
+    with open(r'le_enc_2.pkl', 'rb') as f:
         OrdEnc = pickle.load(f)
-    my_bar.progress(percent := percent + 10, f'{percent}%  трансформация категорий...')
+    my_bar.progress(percent := percent + 15, f'{percent}%  трансформация категорий...')
 
     df[to_LE] = OrdEnc.transform(df[to_LE])
     st.session_state['Сумма']=df['Сумма']
@@ -466,34 +448,34 @@ def models(make_pred: bool, large_model: bool, device)->None:
                 for i, model_path in enumerate(os.listdir(f'./models/{path}/')):
                     my_bar.progress(percent:= percent+3, f'{percent}%: {model_names[i]}, fold: {fold}')
                     if model_path[-4:] == '.pkl':
-                        with open(f'./streamlit/models/{path}/{model_path}', 'rb') as f:
+                        with open(f'./models/{path}/{model_path}', 'rb') as f:
                             model = joblib.load(f)
                     elif model_path[-5:] == '.json':
                         model = xgb.Booster()
                         model.load_model(f"./models/{path}/{model_path}")
                     if model_path[:2] == 'cb':
-                         temp[model_names[i]] = model.predict_proba(df, task_type=device)[:, 1]
-                         if fold%2==1:
+                        if fold % 2 == 1:
+                            temp[model_names[i]] = model.predict_proba(df, task_type=device)[:, 1]
                             models[i].append(model)
                     elif model_path[:3] == 'xgb':
                         temp[model_names[i]] = model.predict(xgb.DMatrix(df))
-                        xgb_pred+=model.predict(xgb.DMatrix(df))
                         if fold % 2 == 1:
+                            xgb_pred+=model.predict(xgb.DMatrix(df))
                             models[i].append(model)
                 my_bar.progress(percent := percent + 10, f'{percent}%: meta_model_{fold}')
                 with open(f'./stacking_model/cb_meta_{fold}.pkl', 'rb') as f:
                     stack = joblib.load(f)
-                meta_models.append(stack)
-                meta_data.append(temp)
-
-                pred_cv.append(stack.predict_proba(temp, task_type=device)[:, 1])
+                if fold%2==1:
+                    meta_models.append(stack)
+                    meta_data.append(temp)
+                    pred_cv.append(stack.predict_proba(temp, task_type=device)[:, 1])
             my_bar.empty()
             cont_side.success('выполнено!!!')
             st.session_state['meta_models'] = meta_models
             st.session_state['meta_data'] = meta_data
             st.session_state['xgb_pred'] = (xgb_pred/4).round()
         else:
-            with open(f'./streamlit/models/fold_0/cb_42_0.pkl', 'rb') as f:
+            with open(f'./models/fold_0/cb_42_0.pkl', 'rb') as f:
                 model = joblib.load(f)
             #model = Tabr('./streamlit/models/fold_0/best_0.pt')
 
