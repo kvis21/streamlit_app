@@ -30,7 +30,7 @@
 2. models разделена на 4 фолда, где лежат веса бустингов
 3. stacking_model хранит веса моделей стекинга
 4. ph содержит png графиков для слайдера
-5. скачать энкодер по ссылке https://drive.google.com/file/d/1dZuEybb3I71aP8mlPYEM4YrKaLv3Fj_V/view?usp=sharing и загрузить его в основную директорию
+5. скачать энкодер по ссылке https://drive.google.com/file/d/1dZuEybb3I71aP8mlPYEM4YrKaLv3Fj_V/view?usp=sharing и загрузить его в папку с кодом
 
 ### Для запуска слайдера
 1. pip install streamlit
