@@ -37,4 +37,6 @@
 2. в '.\python\Lib\site-packages\streamlit\static\' поместить js и ph папки
 3. запуск производится через streamlit run st_main.py
 
+Оригинальный код был написан на python=3.10
+
 
